@@ -1,0 +1,56 @@
+import {compose} from "redux";
+import {connect} from "react-redux";
+
+export default function(ComposedClass) {
+    class AutoTimeout extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          warningTime: 1000 * 60 * 1,
+          time: {}, 
+          seconds: 5
+        };
+
+        this.timer = 0;
+        this.setTimeout = this.setTimeout.bind(this);
+        this.clearTimeoutFunc = this.clearTimeoutFunc.bind(this);
+      }
+  
+      componentDidMount() {
+        this.setTimeout();
+      }
+
+      clearTimeoutFunc(){
+        if (this.warnTimeout){ 
+          clearTimeout(this.warnTimeout);
+          this.warnTimeout = 0;
+        }
+      }
+  
+      setTimeout() {
+        this.warnTimeout = setTimeout(this.warn.bind(this), this.state.warningTime); 
+      }
+  
+      resetTimeout() {
+        if(!this.state.showWarning){
+          this.clearTimeoutFunc();
+          this.setTimeout();
+        }
+      }
+  
+      warn() {
+        alert('Warning!! You have been inactive');
+        this.resetTimeout();
+      }
+  
+      render() {
+        return (
+          <div>
+            <ComposedClass {...this.props} />   
+          </div>
+        );
+      }
+    }
+    return AutoTimeout;
+  }
+  
