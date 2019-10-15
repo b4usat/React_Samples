@@ -1,0 +1,169 @@
+import {compose} from "redux";
+import {connect} from "react-redux";
+
+export default function(ComposedClass) {
+    class AutoTimeout extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          warningTime: 1000 * 60 * 19,//process.env.TIMEOUT_WARNING_MINUTES,
+          signoutTime: 1000 * 60 * 20,//process.env.TIMEOUT_MINUTES,
+          showWarning: false,
+          extensionCount: 0,
+          time: {}, 
+          seconds: 5
+        };
+
+        this.timer = 0;
+
+        this.clearTimeoutFunc = this.clearTimeoutFunc.bind(this);
+        this.setTimeout = this.setTimeout.bind(this);
+        this.resetTimeout = this.resetTimeout.bind(this);
+        this.onClick = this.onClick.bind(this);
+        this.logout = this.logout.bind(this);
+        this.destroy = this.destroy.bind(this);
+        
+      }
+  
+      componentDidMount() {
+        this.events = [
+          'load',
+          'mousemove',
+          'mousedown',
+          'click',
+          'scroll',
+          'keypress'
+        ];
+  
+        for (var i in this.events) {
+          window.addEventListener(this.events[i], this.resetTimeout.bind(this));
+        }
+  
+        this.setTimeout();
+      }
+
+      componentWillUnmount(){
+        this.clearTimeoutFunc();
+      }
+  
+      secondsToTime(secs){
+        let hours = Math.floor(secs / (60 * 60));
+    
+        let divisor_for_minutes = secs % (60 * 60);
+        let minutes = Math.floor(divisor_for_minutes / 60);
+    
+        let divisor_for_seconds = divisor_for_minutes % 60;
+        let seconds = Math.ceil(divisor_for_seconds);
+    
+        let obj = {
+          "h": hours,
+          "m": minutes,
+          "s": seconds
+        };
+        return obj;
+      }
+
+      clearTimeoutFunc(){
+        if (this.warnTimeout){ 
+          clearTimeout(this.warnTimeout);
+          this.warnTimeout = 0;
+        }
+  
+        if (this.logoutTimeout) {
+          clearTimeout(this.logoutTimeout);
+          this.logoutTimeout = 0;
+        }
+      }
+  
+      setTimeout() {
+        this.warnTimeout = setTimeout(this.warn.bind(this), this.state.warningTime);
+        this.logoutTimeout = setTimeout(this.logout.bind(this), this.state.signoutTime);
+      }
+  
+      resetTimeout() {
+        if(!this.state.showWarning){
+          this.clearTimeoutFunc();
+          this.setTimeout();
+        }
+      }
+  
+      warn() {
+        if(this.state.extensionCount < 3){//process.env.TIMEOUT_EXTENSION_COUNT_ALLOWED
+          this.setState({
+            extensionCount: (this.state.extensionCount + 1),
+            showWarning: true,
+            seconds: 60 //* (process.env.TIMEOUT_MINUTES - process.env.TIMEOUT_WARNING_MINUTES)
+          });
+
+          if (this.timer === 0 && this.state.seconds > 0) {
+            this.timer = setInterval(this.countDown.bind(this), 1000);
+          }
+        }
+      }
+
+      countDown() {
+        // Remove one second, set state so a re-render happens.
+        let seconds = this.state.seconds - 1;
+        this.setState({
+          time: this.secondsToTime(seconds),
+          seconds: seconds,
+        });
+        
+        // Check if we're at zero.
+        if (seconds === 0) { 
+          clearInterval(this.timer);
+          this.timer = 0;
+        }
+      }
+  
+      logout(){
+        this.clearTimeoutFunc();
+        this.destroy();
+      }
+
+      onClick(){
+        this.resetTimeout();
+        this.setState({
+          showWarning: false
+        });
+      }
+  
+      destroy() {
+       this.props.history.replace('/timeout');
+      }
+  
+      render() {
+        const showHideClassName = this.state.showWarning ? "modal display-block" : "modal display-none";
+        
+        return (
+          <div>
+            <ComposedClass {...this.props} />   
+            <div className="view-container-medium align-center"> 
+              <div className={showHideClassName}>
+                <section className="modal-main">
+                  <h1 className="tds-h1--small">Warning</h1>
+              
+                  <hr />
+                  <div className="spacing">
+                      <p>You will be logged out automatically in <b> {this.state.time.m} : {this.state.time.s} </b>. Click Ok to extend the session.</p>
+                      <div className="modal-buttons-group">
+                          <button type="button" className=" tds-button--tertiary buttonwidth" onClick={this.onClick} >Ok</button>
+                          <button type="button" className="tds-button--tertiary buttonwidth" onClick={this.logout}>Cancel</button>
+                      </div>
+                    </div>
+                  </section>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    }
+    return connect(mapStateToProps)(AutoTimeout);
+  }
+  function mapStateToProps(state) {
+    return {
+      showWarning: state.showWarning
+    };
+  }
+  
+  
