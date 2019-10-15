@@ -10,8 +10,6 @@
         "*": ["*", "src/*"],
         "@/*": ["src/*"],
         "Components": ["src/components/*"],
-        "Api": ["src/api/*"],
-        "Store": ["src/components/app-store/*"]
       }
     },
     "exclude": ["node_modules"],
