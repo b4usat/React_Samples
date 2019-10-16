@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types'
+import ErrorMessage from '../src/error/errormessage'
 
 const Button = (props) => {
   return (
@@ -19,6 +20,7 @@ const Input = (props) => {
       <input className="form-control" id={props.name} name={props.name} type={props.type} value={props.toappear}
         onChange={props.handlechange} placeholder={props.placeholder}
       />
+      <ErrorMessage name={props.name} handleError={props.handleerror} />
     </div>
   )
 }

@@ -9,7 +9,9 @@ module.exports = {
     resolve: {
         extensions: ['.jsx', '.js', '.json', '.css']        
     },
-    module: {
+    devtool: 'source-map',
+    module:
+     {
         rules: [
             {
                 test: /\.(js|jsx)$/,
